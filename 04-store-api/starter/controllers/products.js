@@ -2,7 +2,7 @@ const Product = require("../models/product");
 const getAllProducts = async (req, res) => {
   // throw new Error("Test ERROR"); // auto throw to default error handler cause of express-aysnc-errors package
   // const products = await Product.find(req.query); // return result according to query // nth return if some unexist field passed like jobs=web
-  const { featured, company, name } = req.query;
+  const { featured, company, name, sort } = req.query;
   const queryObject = {};
   if (featured) {
     queryObject.featured = featured === "true" ? true : false;
@@ -15,7 +15,16 @@ const getAllProducts = async (req, res) => {
     queryObject.name = { $regex: name, $options: "i" }; // options 'i' for case insensitive
   }
   //filter the field we want to be searched
-  const products = await Product.find(queryObject);
+  let result = Product.find(queryObject);
+  //sorting
+  if (sort) {
+    //sort=name,-price => .sort('name -price)
+    sortList = sort.split(",").join(" ");
+    result = result.sort(sortList);
+  } else {
+    result = result.sort({ createdAt: -1 });
+  }
+  const products = await result;
   res.status(200).json({ products, nbHits: products.length });
 };
 module.exports = {
